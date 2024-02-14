@@ -1,1 +1,5 @@
 .venv/
+# Local download folder.
+download/
+*.json
+!sample.json
