@@ -1,4 +1,6 @@
-# Personal Minecraft Mod Download
+# Minecraft SMD (Simple Mod Download)
+
+Very creative name, I know.
 
 ## For Who?
 
@@ -12,14 +14,16 @@ People who have a fixed set of mods that they want to upgrade or downgrade to a 
 
 ## What?
 
-A short script to download mods from Modrinth (and maybe CurseForge and GitHub in the future?). This will only consist of Fabric mods, but it should be easy to modify it into any mod loaders if you can read the code.
+Small scripts to download mods from Modrinth and GitHub. This is tested for Fabric, but in theory it *should* work for other loaders.
+
+There are two scripts: `modrinth.py` and `github.py`, which download from their respective sources. *Use `modrinth.py` whenever possible because it is a more dedicated platform for Minecraft modding and thus will yield more accurate downloads.* GitHub can be used as a fallback for mods that are on CurseForge or GitHub is faster to update.
 
 ## Why?
 
 1. I'm lazy. And as with all programmers, they'll spend days to automate this process instead of manually doing it.
 2. Launcher can be bulky. Something small for a task that's rarely needed is sufficient.
 
-## Features
+## Features?
 
 - [x] Download from Modrinth.
     - [x] Ratelimit
@@ -28,16 +32,19 @@ A short script to download mods from Modrinth (and maybe CurseForge and GitHub i
     - [x] Resolve dependency automatically.
         - This functionality is currently not working as expected (due to the API itself). I will do something about this later.
     - [ ] Download in parallel.
-- [ ] Fallback to CurseForge.
-- [ ] Fallback to GitHub release download.
+- [x] Fallback to GitHub release download.
 
-## Instruction
+## What about CurseForge?
 
-The next section will detail how to use the script.
+Probably not going to happen. They require an API key to even do a GET request so I can't be bothered with that.
 
-### First Run
+## How to use?
 
-1. Download the entire repository via GitHub or Git. 
+The next section will detail how to use the scripts.
+
+### Download scripts
+
+1. Download the entire repository via GitHub or Git. Note the dot at the end.
 
 ```sh
 git clone https://github.com/MikeJollie2707/personal-mcmod-download.git .
@@ -49,39 +56,25 @@ git clone https://github.com/MikeJollie2707/personal-mcmod-download.git .
 python3 -m pip install -r requirements.txt
 ```
 
-3. Create a `.json` file. The file will have the following structure:
+### Configure scripts
 
-```json
-{
-    "mod_id": "mod name. This field acts as comment, but don't leave it empty.",
-    "mod_id2": "mod name."
-}
-```
+Two JSON files, `sample_modrinth.json` and `sample_gh.json`, are provided as templates to configure each scripts. The actual name of the JSON file doesn't matter. Please see [settings](#script-settings) for more details on what their structures are.
 
-Especially on the FIRST RUN, only include 1-2 mods with close to no dependencies.
+Note that for any scripts, test it out first with 1-2 small mods first to make sure the script is functional. **If you're planning to download 100+ mods (including all of its dependencies), DON'T.** Split them into two different JSON files then run them separately with some minutes inbetween.
 
-You can view the structure in `sample.json`. To find `mod_id` of a mod, find the mod on Modrinth, then scroll down until you see "Project ID" (bottom left of the picture).
+### Run the script
 
-![Project ID of Sodium](./assets/where_to_find_modid.png)
-
-4. Run the script. Replace `1.20.4` with the actual Minecraft version and `sample.json` with your file.
+Run the command below. Replace `modrinth.py` with the actual script you want to run and replace `sample_modrinth.json` with your actual JSON file correspond to the script.
 
 ```sh
-python3 modrinth.py 1.20.4 sample.json
+python3 modrinth.py sample_modrinth.json
 ```
 
-In case you did step 2 without using a virtual environment, you can make the script executable like so:
-
-```sh
-chmod u+x modrinth.py
-./modrinth.py 1.20.4 sample.json
-```
-
-### After first run
+### What's next?
 
 #### Add more mods
 
-Find them on Modrinth, copy project ID, run the script again, profit. Note that if you have around 100+ mods in a `.json` file, it is recommended to split that into another `.json` file to reduce the load.
+Follow the instruction for the entry `MODS` for each script to add more mods. Note that if you have around 100+ mods in a `.json` file, it is recommended to split that into another `.json` file to reduce the load.
 
 #### Custom configuration
 
@@ -95,35 +88,67 @@ See [this setting](#resolve_dependencies). After this, you can remove base mods 
 
 #### Temporarily not download a mod
 
+*Only applies to `modrinth.py`*
+
 In the mod remark, set it to empty string, like so:
 
 ```json
 {
-    "mod_id": ""
+    "MODS": {
+        "mod_id": ""
+    }
 }
 ```
 
 ## Script Settings
 
-You can manually edit some global variables in `main.py` (all capital letters). **Do not edit any global variables with underscores in front (like `__HEADERS`)**
+### `modrinth.py` settings
 
-### `MC_VERSION`
+Each key in the JSON file correspond to each of the below settings. Some are required.
+
+#### `MC_VERSION`
+
+*Required*
+*Value Type: String*
 
 Download mods for this particular version. For snapshots, I don't recommend using this script since 1. Hard to get the snapshot number right and 2. Not many mods will publish for snapshots, so might as well as just do that manually.
 
-Normally, this will take the first command line argument. You can manually set it to a specific value (like in snapshots), but make sure to still provide some dummy value when invoking the script.
+#### `MOD_LOADER`
 
-### `DOWNLOAD_PATH`
+*Required*
+*Value Type: String*
+
+Just putting it here in case you want to download `quilt` or `neoforge`.
+
+#### `MODS`
+
+*Required*
+*Value Type: Object*
+
+The mods to download. Each entry in the object is composed of a *mod ID* as the key and a *remark* as the value. The remark can be anything, but it is advised to put descriptive things there (like the mod's name) so it can be easily identified in the log. The key can be found on Modrinth. Click on a mod on Modrinth, look at bottom left.
+
+![Project ID of Sodium](./assets/where_to_find_modid.png)
+
+#### `DOWNLOAD_PATH`
+
+*Optional*
+*Value Type: Array of Strings*
 
 Where the mods will go. By default, it'll go `./download/{MC_VERSION}` (create if not exist). This is usually not necessary to edit since you can copy the mods to the Minecraft instance, but it's there nonetheless.
 
-### `CHECK_HASH`
+#### `CHECK_HASH`
 
-Whether to verify the integrity of the file you just downloaded. This can help prevent something like `fractureiser` (maybe, it depends on how Modrinth get the public key). By default, this is on, but you can turn it off by setting it to `False`.
+*Optional*
+*Value Type: Boolean*
 
-### `RESOLVE_DEPENDENCIES`
+Whether to verify the integrity of the file you just downloaded. This can help prevent something like `fractureiser` (maybe, it depends on how Modrinth get the public key). By default, this is `true`.
 
-Big setting. Whether to automatically download all dependencies for a given mod. By default, this is `False`. There are a few things to keep in mind before setting it to `True`:
+#### `RESOLVE_DEPENDENCIES`
+
+*Optional*
+*Value Type: Boolean*
+
+Big setting. Whether to automatically download all dependencies for a given mod. By default, this is `false`. There are a few things to keep in mind before setting it to `true`:
 
 1. It will only download the first dependency layer. If mod A depends on mod B and C, it'll download mod B and C. However, if mod B also depends on mod D, it *will not* download mod D.
 2. If a mod is big (depends on like 50+ mods), it is recommended to put this mod in a separate `.json`.
@@ -132,14 +157,55 @@ Big setting. Whether to automatically download all dependencies for a given mod.
 
 Most of these things are to prevent the script hitting the API ratelimit.
 
-### `VERBOSE_LEVEL`
+#### `VERBOSE_LEVEL`
 
-How noisy the script will be. `logging.ERROR` will only show errors, `logging.WARNING` will show errors and warnings, `logging.INFO` will show `logging.WARNING` and download progress. By default, it is `logging.INFO`, but you can set to `logging.ERROR` if it's spamming a lot.
+*Optional*
+*Value Type: String*
 
-### `REQUIRE_FEATURED`
+How noisy the script will be. `"ERROR"` will only show errors, `"WARNING"` will show errors and warnings, `"INFO"` will show `"WARNING"` and download progress. By default, it is `"INFO"`, but you can set to `"ERROR"` if it's spamming a lot.
 
-Whether to only look for the versions of the mod that's featured. Small setting, but if the script can't find a particular mod for whatever reason, you can try setting this to `False` and see if it picks up. Default to `True`.
+#### `REQUIRE_FEATURED`
 
-### `MOD_LOADER`
+*Optional*
+*Value Type: Boolean*
 
-Just putting it here in case you download `quilt` or `neoforge`.
+Whether to only look for the versions of the mod that's featured. Small setting, but if the script can't find a particular mod for whatever reason, you can try setting this to `false` and see if it picks up. Default to `true`.
+
+### `github.py` settings
+
+Each key in the JSON file correspond to each of the below settings. Some are required.
+
+#### `MODS`
+
+*Required*
+*Value Type: Object*
+
+The mods to download. The object is comprised of an author as the key and a list of mods under this author as the value. *This has to be exactly the same as it is on GitHub.* For example, it is "gnembon", not "Gnembon", and it is "fabric-carpet", not just "carpet" or "Carpet". To make sure this is correct, it's best to look at the GitHub URL of the project. Copy the value after `github.com/` and omit the slashes.
+
+![How to find these values for Carpet](./assets/how_to_find_modname_github.png)
+
+#### `KEYWORDS`
+
+*Required*
+*Value Type: Array of String*
+
+The keywords to find within each mod. Because GitHub doesn't tag mod, the script will perform validity check on the filename itself. These keywords will be used to find the correct mod, so these are very important. Typically, this is basically just the Minecraft version and the word "fabric" or whatever mod loader of your choice.
+
+Note that for intial Minecraft versions like "1.20" or "1.21", it's very likely for the script to also download their subversions like "1.20.1" or "1.20.4"
+
+#### `DOWNLOAD_PATH`
+
+*Required*
+*Value Type: Array of String*
+
+Where the mods will go relative to the directory you're running the script in.
+
+#### `SEARCH_DEPTH`
+
+*Optional*
+*Value Type: Integer*
+*Max value: 30*
+
+How many releases to check per mod, starting from the latest release. Basically bigger number = higher chance of finding older version of mods, but also higher chance of duplication of same mod on same Minecraft version. By default, this is 10.
+
+If the 30 max value is not enough, you can edit the script. Nothing is stopping you.

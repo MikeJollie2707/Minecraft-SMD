@@ -1,0 +1,8 @@
+{
+    "SEARCH_DEPTH": 4,
+    "KEYWORDS": ["1.21", "fabric"],
+    "DOWNLOAD_PATH": ["download", "1.21"],
+    "MODS": {
+        "gnembon": ["fabric-carpet", "carpet-extra"]
+    }
+}

@@ -2,4 +2,5 @@
 # Local download folder.
 download/
 *.json
-!sample.json
+!sample_modrinth.json
+!sample_gh.json
