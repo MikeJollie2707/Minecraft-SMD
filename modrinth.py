@@ -8,42 +8,11 @@ import sys
 
 import requests
 
-# The version of Minecraft. For snapshots versions, look on Modrinth docs.
-# This will be used in several places in the script so make sure this is correct.
-MC_VERSION = sys.argv[1]
-
-# The destination for the mods.
-DOWNLOAD_PATH = os.path.join("download", MC_VERSION)
-
-# Whether to verify the integrity of the mod file. False make the process faster but might be LESS SECURE.
-CHECK_HASH = True
-
-# Whether to automatically download required dependencies. False will not download a mod required dependencies.
-# NOTE: This will only resolve 1 level of dependency. If the dependency also depends on another dependencies, list the 2nd
-# level mods in the .json
-# NOTE: Enable this to true can make you reach timeout if you're not careful of which mods you're downloading.
-RESOLVE_DEPENDENCIES = False
-
-# How noisy the script will be.
-# logging.INFO will be somewhat noisy, but it'll show download progress.
-# logging.WARNING will only show warning and errors.
-VERBOSE_LEVEL = logging.INFO
-
-# Whether to only look at featured versions. False might return duplicate mod entries.
-# A notorious example for now that has other versions not featured is Carpet.
-REQUIRE_FEATURED = True
-
-# Note that I don't test any other loaders aside from Fabric, but theoretically it should work for others.
-MOD_LOADER = "fabric"
-
 # Don't change any of these.
 __HEADERS = {
     "User-Agent": "MikeJollie2707/personal-mcmod-download/0.0.1",
 }
-__MODRINTH_BASE_DEV_API = "https://staging-api.modrinth.com/v2"
-__MODRINTH_BASE_PROD_API = "https://api.modrinth.com/v2"
 __TESTING = False
-logging.basicConfig(level=VERBOSE_LEVEL)
 
 
 class RequestController:
@@ -96,15 +65,36 @@ def to_list_param(l: list, /) -> str:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        mod_file = sys.argv[2]
+    if len(sys.argv) == 2:
+        mod_file = sys.argv[1]
     else:
         print("Missing a command line argument. Need to be .json")
         exit(1)
 
+    settings: dict = {}
     mods = {}
     with open(mod_file, "r", encoding="utf-8") as fin:
-        mods = json.load(fin)
+        try:
+            settings = json.load(fin)
+            MC_VERSION = settings["MC_VERSION"]
+            DOWNLOAD_PATH = settings.get("DOWNLOAD_PATH")
+            if DOWNLOAD_PATH:
+                DOWNLOAD_PATH = os.path.join(*DOWNLOAD_PATH)
+            else:
+                DOWNLOAD_PATH = os.path.join("download", MC_VERSION)
+            CHECK_HASH = settings.get("CHECK_HASH", True)
+            RESOLVE_DEPENDENCIES = settings.get("RESOLVE_DEPENDENCIES", False)
+            VERBOSE_LEVEL = settings.get("VERBOSE_LEVEL", "INFO")
+            REQUIRE_FEATURED = settings.get("REQUIRE_FEATURED", True)
+            MOD_LOADER = settings["MOD_LOADER"]
+            
+            mods = settings["MODS"]
+
+            logging.basicConfig(level=VERBOSE_LEVEL)
+        except Exception as e:
+            print(e)
+            sys.exit(1)
+
 
     with requests.Session() as conn:
         conn.headers.update(__HEADERS)
@@ -190,7 +180,7 @@ if __name__ == "__main__":
                     if RESOLVE_DEPENDENCIES:
                         depend_ids = []
                         for dependency in dependencies:
-                            if dependency["project_id"] in mods:
+                            if dependency["project_id"] in settings:
                                 logging.warning(
                                     "Dependency %s for %s already available in .json. Skipping...",
                                     dependency["project_id"],
