@@ -47,7 +47,7 @@ The next section will detail how to use the scripts.
 1. Download the entire repository via GitHub or Git. Note the dot at the end.
 
 ```sh
-git clone https://github.com/MikeJollie2707/personal-mcmod-download.git .
+git clone https://github.com/MikeJollie2707/Minecraft-SMD.git .
 ```
 
 2. Install necessary dependencies. If you know how to use `venv`, install there instead. Make sure to activate the environment with `source`.
